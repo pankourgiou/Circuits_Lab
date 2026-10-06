@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Circuits Lab: logic, truth tables and quantum circuits</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf0f3;--ink:#0d2230;--mut:#55707f;--line:#c3d1d9;--card:#f7fafb;--hi:#138a5e;--lo:#8ea3af;--q:#5a3fd0;--acc:#0b6f86;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a22;--ink:#dbe9ef;--mut:#8aa5b3;--line:#1f3744;--card:#11242e;--hi:#3ddc97;--lo:#4a6575;--q:#9a86ff;--acc:#4cc3dc}}
+:root[data-theme="dark"]{--bg:#0b1a22;--ink:#dbe9ef;--mut:#8aa5b3;--line:#1f3744;--card:#11242e;--hi:#3ddc97;--lo:#4a6575;--q:#9a86ff;--acc:#4cc3dc}
+*{box-sizing:border-box;margin:0}html{height:100%}body{background:var(--bg);color:var(--ink);font:16px/1.55 'Bricolage Grotesque',system-ui,sans-serif;min-height:100%}
+.m,table,.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+header{max-width:980px;margin:0 auto;padding:36px 20px 8px}h1{font-size:clamp(30px,6vw,56px);font-weight:800;letter-spacing:-.02em;line-height:1.05;max-width:16ch}header p{color:var(--mut);max-width:60ch;margin-top:10px}
+nav{max-width:980px;margin:18px auto 0;padding:0 20px;display:flex;gap:6px;flex-wrap:wrap}
+button,select,input{font:inherit;color:inherit}
+.tab,.chip,.b{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:7px 13px;cursor:pointer}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}.chip.on,.b.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{max-width:980px;margin:0 auto;padding:18px 20px 60px}section{display:none}section.on{display:block}
+h2{font-size:24px;margin:6px 0 4px}.sub{color:var(--mut);margin-bottom:14px;max-width:70ch}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin:12px 0}
+table{border-collapse:collapse;font-size:14px}th,td{border:1px solid var(--line);padding:5px 12px;text-align:center}th{background:var(--bg)}
+td.o1{color:var(--hi);font-weight:600}td.o0{color:var(--lo)}tr.cur td{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.lamp{width:56px;height:56px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:600 20px 'IBM Plex Mono',monospace;background:var(--bg);color:var(--lo)}.lamp.on{background:var(--hi);color:#fff;border-color:var(--hi)}
+.tg{min-width:64px;font:600 18px 'IBM Plex Mono',monospace}.tg.on{background:var(--ink);color:var(--bg)}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);font:16px 'IBM Plex Mono',monospace}
+.scr{overflow-x:auto}.err{color:#c0392b}.note{color:var(--mut);font-size:14px}
+.qg{display:grid;gap:0;align-items:center;min-width:max-content}.lab{font:14px 'IBM Plex Mono',monospace;padding-right:10px;color:var(--mut)}
+.cell{width:46px;height:46px;position:relative;cursor:pointer;display:grid;place-items:center}.cell::before{content:'';position:absolute;left:0;right:0;top:50%;height:2px;background:var(--line)}
+.cell:hover{background:color-mix(in srgb,var(--q) 10%,transparent)}
+.gb{position:relative;z-index:1;width:34px;height:34px;border-radius:5px;background:var(--q);color:#fff;display:grid;place-items:center;font:600 14px 'IBM Plex Mono',monospace}
+.dot{position:relative;z-index:1;width:12px;height:12px;border-radius:50%;background:var(--q)}.vl{position:absolute;left:50%;width:2px;background:var(--q);z-index:0}
+.bar{display:grid;grid-template-columns:54px 1fr 64px;gap:8px;align-items:center;font:13px 'IBM Plex Mono',monospace;margin:3px 0}.bar i{display:block;height:16px;background:var(--q);border-radius:3px;min-width:1px}.bar.s i{background:var(--acc)}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.g2 .card{margin:0}.g2 h3{font-size:16px;margin-bottom:6px}.g2 p{font-size:14px}
+@media(prefers-reduced-motion:no-preference){.bar i{transition:width .25s}}
+</style></head><body>
+<header><h1>Circuits Lab</h1><p>Logic gates, truth tables, adders and a quantum circuit simulator. Everything here runs live in your browser.</p></header>
+<nav id="nav"></nav>
+<main>
+<section id="gates"><h2>Logic gates</h2><p class="sub">Pick a gate, flip the inputs and watch the matching row of its truth table light up.</p>
+<div class="row" id="gsel"></div>
+<div class="card"><div class="row"><span>A</span><button class="b tg" id="ta"></button><span id="bl">B</span><button class="b tg" id="tb"></button><span>Output</span><div class="lamp" id="lamp"></div><span class="mono" id="gx"></span></div><div id="gt"></div><p class="note" id="gd" style="margin-top:10px"></p></div>
+<div class="card"><h3>Everything from NAND</h3><p class="note">NAND is universal. Pick a gate to see it rebuilt from NAND gates only, then checked against the real gate on every row.</p><div class="row" id="nsel"></div><div id="nout"></div></div></section>
+
+<section id="expr"><h2>Truth table builder</h2><p class="sub">Type any Boolean expression. Operators: ! or ~ (NOT), &amp; or * (AND), ^ (XOR), | or + (OR), with parentheses. Words AND, OR, XOR, NOT also work. Up to 6 variables.</p>
+<input type="text" id="ei" value="(A & B) | (!A & C)" spellcheck="false" aria-label="Boolean expression">
+<div class="row" id="ex"></div><div id="eo"></div>
+<div class="card"><h3>Equivalence checker</h3><p class="note">Compare the expression above with a second one. Variables may differ between them.</p><input type="text" id="ei2" value="(A | C) & (!A | B)" spellcheck="false" aria-label="Second expression"><div id="eq" style="margin-top:8px"></div></div></section>
+
+<section id="add"><h2>Adders</h2><p class="sub">A half adder is XOR and AND. A full adder chains two of them and an OR. Chain full adders to add whole numbers.</p>
+<div class="card"><h3>4-bit ripple-carry adder</h3><div class="row"><label>A <input type="range" id="ra" min="0" max="15" value="9"> <b class="mono" id="va"></b></label><label>B <input type="range" id="rb" min="0" max="15" value="7"> <b class="mono" id="vb"></b></label></div><div class="scr" id="ao"></div></div>
+<div class="card"><h3>Full adder truth table</h3><div class="scr" id="fa"></div><p class="note" style="margin-top:8px">Sum = A ⊕ B ⊕ Cin. Cout = AB + Cin(A ⊕ B).</p></div></section>
+
+<section id="qc"><h2>Quantum circuit simulator</h2><p class="sub">All qubits start in |0⟩. Choose a gate, then click a wire position to place it. Click a placed gate to remove it. Two-qubit gates use the clicked wire and the one below it (control on the clicked wire).</p>
+<div class="row" id="qp"></div>
+<div class="row"><span>Qubits</span><span id="qn"></span><span style="width:12px"></span><span>Presets</span><span id="qs"></span></div>
+<div class="card scr" id="qg"></div>
+<div class="card"><div class="row"><button class="b" id="qclr">Clear circuit</button><button class="b" id="qcp">Copy OpenQASM</button><label>State after step <input type="range" id="qup" min="0" max="8" value="8"> <b class="mono" id="qupv">8</b></label></div><pre class="mono note" id="qq" style="overflow-x:auto;font-size:12px"></pre></div>
+<div class="g2"><div class="card"><h3>Probabilities</h3><div id="qb"></div></div><div class="card"><h3>Amplitudes</h3><div id="qa" class="mono" style="font-size:13px"></div></div></div>
+<div class="card"><div class="row"><button class="b" id="sh">Measure 1024 shots</button><span class="note">Samples the final state like a real device would.</span></div><div id="so"></div></div></section>
+
+<section id="seq"><h2>Sequential logic</h2><p class="sub">Flip-flops store one bit. Set the inputs, then pulse the clock: the output only changes on the clock edge.</p>
+<div class="row" id="fsel"></div>
+<div class="card"><div class="row" id="fin"></div><div class="row"><span>Q</span><div class="lamp" id="fq"></div><span>Q′</span><div class="lamp" id="fqn"></div><span class="err" id="fnote"></span></div><div class="scr" id="fh"></div><p class="note" id="fd" style="margin-top:8px"></p></div>
+<div class="card"><h3>3-bit ripple counter</h3><p class="note">Three T flip-flops with T=1 in a chain. Each stage halves the frequency of the one before, so the bits count in binary.</p><div class="row" id="cc"></div></div></section>
+
+<section id="num"><h2>Number systems</h2><p class="sub">Toggle the bits of a byte and read it as unsigned, two's complement, hex, octal and ASCII. The low nibble drives a seven-segment decoder.</p>
+<div class="card"><div class="row" id="nb"></div><div class="row" id="no"></div><div class="scr" id="nd"></div></div>
+<div class="card"><h3>Seven-segment decoder</h3><div class="row"><div id="sg"></div><div id="sgt" class="mono"></div></div></div></section>
+
+<section id="quiz"><h2>Practice</h2><p class="sub">Evaluate the expression for the given inputs.</p>
+<div class="card"><div id="zt"></div><div class="row"><button class="b tg" id="z0">0</button><button class="b tg" id="z1">1</button><button class="b" id="zn">Next question</button></div><p id="zf" style="min-height:1.6em"></p><p class="note" id="zs"></p></div></section>
+
+<section id="ref"><h2>Reference</h2><div class="g2">
+<div class="card"><h3>Boolean laws</h3><p class="mono">A+0=A · A·1=A<br>A+A′=1 · A·A′=0<br>De Morgan: (AB)′=A′+B′ and (A+B)′=A′B′<br>Absorption: A+AB=A<br>XOR: A⊕B = AB′+A′B</p></div>
+<div class="card"><h3>Universal gates</h3><p>NAND alone, or NOR alone, can build every other gate. NOT = NAND(A,A). AND = NOT of NAND. OR = NAND(A′,B′).</p></div>
+<div class="card"><h3>Normal forms</h3><p>Sum of products (SOP) ORs the minterms where the output is 1. Product of sums (POS) ANDs the maxterms where it is 0. Karnaugh maps group adjacent minterms to simplify.</p></div>
+<div class="card"><h3>Sequential logic</h3><p>Latches and flip-flops (SR, D, JK, T) add memory with feedback. Combinational outputs depend only on current inputs; sequential outputs also depend on stored state.</p></div>
+<div class="card"><h3>Quantum gates</h3><p class="mono">X: [[0,1],[1,0]]<br>Z: [[1,0],[0,−1]]<br>H: (1/√2)[[1,1],[1,−1]]<br>S: diag(1,i) · T: diag(1,e^{iπ/4})<br>CNOT flips target if control is 1</p></div>
+<div class="card"><h3>Entanglement</h3><p>H on q0 then CNOT gives the Bell state (|00⟩+|11⟩)/√2: the two qubits are always measured equal, yet each alone looks random. GHZ extends this to three.</p></div>
+<div class="card"><h3>Reversibility</h3><p>Quantum gates are unitary, so every one is reversible and none can copy an unknown state (no-cloning). Classical AND and OR lose information; Toffoli and Fredkin gates are reversible classical gates.</p></div>
+<div class="card"><h3>Measurement</h3><p>Measuring collapses the state. The chance of outcome k is |amplitude|². Phase never shows in a single measurement but drives interference between gates.</p></div>
+<div class="card"><h3>Karnaugh maps</h3><p>Order rows and columns in Gray code so neighbours differ by one bit. Circle rectangles of 1s with sizes 1, 2, 4, 8. Bigger groups give simpler terms, and groups may wrap around the edges.</p></div>
+<div class="card"><h3>Flip-flop equations</h3><p class="mono">D: Q⁺ = D<br>T: Q⁺ = T ⊕ Q<br>JK: Q⁺ = JQ′ + K′Q<br>SR: Q⁺ = S + R′Q (SR = 0)</p></div>
+<div class="card"><h3>Number systems</h3><p>Two's complement negates by inverting all bits and adding 1. An n-bit value spans −2ⁿ⁻¹ to 2ⁿ⁻¹−1. One hex digit is exactly 4 bits and one octal digit 3 bits.</p></div>
+<div class="card"><h3>Gate identities</h3><p class="mono">HZH = X · HXH = Z<br>S² = Z · T² = S<br>SWAP = 3 CNOTs<br>CZ = (I⊗H) CNOT (I⊗H)</p></div>
+<div class="card"><h3>Quantum algorithms</h3><p>Grover searches N items in about √N steps. Deutsch–Jozsa separates constant from balanced functions in one query. Shor factors integers using the quantum Fourier transform. Teleportation moves a state using a Bell pair and two classical bits.</p></div></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),mk=(t,c,x,f)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;if(f)e.onclick=f;return e};
+const TABS=[['gates','Logic gates'],['expr','Truth tables'],['add','Adders'],['seq','Sequential'],['num','Number systems'],['qc','Quantum circuits'],['quiz','Practice'],['ref','Reference']];
+function tab(id){TABS.forEach(t=>{$('#'+t[0]).classList.toggle('on',t[0]==id);$('#t_'+t[0]).classList.toggle('on',t[0]==id)})}
+TABS.forEach(t=>{const b=mk('button','tab',t[1],()=>tab(t[0]));b.id='t_'+t[0];$('#nav').append(b)});tab('gates');
+// gates
+const GT={AND:[2,(a,b)=>a&b,'A · B','Output is 1 only when both inputs are 1.'],OR:[2,(a,b)=>a|b,'A + B','Output is 1 when at least one input is 1.'],NOT:[1,a=>1^a,'A′','Inverts its single input.'],NAND:[2,(a,b)=>1^(a&b),'(A · B)′','AND followed by NOT. A universal gate.'],NOR:[2,(a,b)=>1^(a|b),'(A + B)′','OR followed by NOT. A universal gate.'],XOR:[2,(a,b)=>a^b,'A ⊕ B','Output is 1 when the inputs differ. Adds two bits without carry.'],XNOR:[2,(a,b)=>1^(a^b),'(A ⊕ B)′','Output is 1 when the inputs match. An equality checker.']};
+let gk='AND',ga=0,gb=0;
+function gdraw(){const g=GT[gk],two=g[0]==2;$('#ta').textContent=ga;$('#ta').classList.toggle('on',!!ga);$('#tb').textContent=gb;$('#tb').classList.toggle('on',!!gb);$('#tb').style.display=$('#bl').style.display=two?'':'none';
+const o=g[1](ga,gb);$('#lamp').textContent=o;$('#lamp').classList.toggle('on',!!o);$('#gx').textContent=g[2];$('#gd').textContent=g[3];
+let h='<table><tr><th>A</th>'+(two?'<th>B</th>':'')+'<th>Out</th></tr>';for(let a=0;a<2;a++)for(let b=0;b<(two?2:1);b++){const r=g[1](a,b);h+=`<tr class="${a==ga&&(!two||b==gb)?'cur':''}"><td>${a}</td>${two?`<td>${b}</td>`:''}<td class="o${r}">${r}</td></tr>`}$('#gt').innerHTML=h+'</table>';
+document.querySelectorAll('#gsel .chip').forEach(c=>c.classList.toggle('on',c.textContent==gk))}
+Object.keys(GT).forEach(k=>$('#gsel').append(mk('button','chip',k,()=>{gk=k;gdraw()})));
+$('#ta').onclick=()=>{ga^=1;gdraw()};$('#tb').onclick=()=>{gb^=1;gdraw()};gdraw();
+// expressions
+function parse(src){const W={AND:'&',OR:'|',XOR:'^',NOT:'!',NAND:'NAND'},t=[],vars=new Set();(src.match(/[A-Za-z_]\w*|[()!~&|^*+]/g)||[]).forEach(m=>{const u=m.toUpperCase();if(W[u]&&u!='NAND')t.push(W[u]);else{t.push(m);if(/^\w/.test(m))vars.add(m)}});
+let p=0;const pk=()=>t[p],nx=()=>t[p++];
+function pr(){const x=nx();if(x=='('){const e=or();if(nx()!=')')throw'Missing )';return e}if(x=='!'||x=='~'){const e=pr();return v=>1^e(v)}if(x&&/^\w/.test(x))return v=>v[x];throw'Unexpected '+(x||'end of input')}
+function an(){let l=pr();while(pk()=='&'||pk()=='*'){nx();const a=l,r=pr();l=v=>a(v)&r(v)}return l}
+function xo(){let l=an();while(pk()=='^'){nx();const a=l,r=an();l=v=>a(v)^r(v)}return l}
+function or(){let l=xo();while(pk()=='|'||pk()=='+'){nx();const a=l,r=xo();l=v=>a(v)|r(v)}return l}
+if(!t.length)throw'Type an expression';const f=or();if(p<t.length)throw'Unexpected '+t[p];return{f,vars:[...vars].sort()}}
+function edraw(){const o=$('#eo');try{const{f,vars}=parse($('#ei').value),n=vars.length;if(n>6)throw'Use 6 variables or fewer';if(!n)throw'Use at least one variable';
+const rows=[],ms=[];let h='<div class="scr"><table><tr>'+vars.map(v=>`<th>${v}</th>`).join('')+'<th>Out</th></tr>';
+for(let i=0;i<1<<n;i++){const e={},bits=vars.map((v,k)=>e[v]=(i>>(n-1-k))&1),r=f(e)&1;if(r)ms.push(i);h+='<tr>'+bits.map(b=>`<td>${b}</td>`).join('')+`<td class="o${r}">${r}</td></tr>`}
+const N=1<<n,kind=ms.length==N?'Tautology (always 1)':ms.length==0?'Contradiction (always 0)':'Contingent (depends on inputs)';
+const lit=i=>vars.map((v,k)=>((i>>(n-1-k))&1)?v:v+'′').join('');
+o.innerHTML=h+`</table></div><div class="card"><b>${kind}</b><p class="note">${ms.length} of ${N} rows are 1.</p><p class="mono" style="margin-top:6px">Σm(${ms.join(', ')||'none'})</p>${ms.length&&ms.length<=8?`<p class="mono">SOP: ${ms.map(lit).join(' + ')}</p>`:''}<p class="mono">Minimal SOP: ${minsop(ms,vars)}</p>${kmh(f,vars)}</div>`}catch(e){o.innerHTML=`<p class="err">${e}</p>`}}
+$('#ei').oninput=edraw;
+[['(A & B) | (!A & C)','Multiplexer'],['A ^ B ^ C','Odd parity'],['!(A & B) ^ (!A | !B)','De Morgan check'],['(A & B) | (C & (A ^ B))','Full adder carry'],['A | !A','Tautology']].forEach(x=>$('#ex').append(mk('button','chip',x[1],()=>{$('#ei').value=x[0];edraw()})));edraw();
+// adders
+function adraw(){const a=+$('#ra').value,b=+$('#rb').value;$('#va').textContent=a;$('#vb').textContent=b;let c=0,s=[],cs=[];
+for(let i=0;i<4;i++){const x=(a>>i)&1,y=(b>>i)&1,t=x+y+c;s[i]={x,y,cin:c,s:t&1,co:t>>1};c=t>>1}
+let h='<table><tr><th></th>'+[3,2,1,0].map(i=>`<th>bit ${i}</th>`).join('')+'</tr>';
+[['A','x'],['B','y'],['Cin','cin'],['Sum','s'],['Cout','co']].forEach(r=>h+=`<tr><th>${r[0]}</th>`+[3,2,1,0].map(i=>`<td class="${r[1]=='s'?'o'+s[i].s:''}">${s[i][r[1]]}</td>`).join('')+'</tr>');
+$('#ao').innerHTML=h+`</table><p class="mono" style="margin-top:8px">${a} + ${b} = ${a+b} (binary ${(a+b).toString(2).padStart(5,'0')}${a+b>15?', carry out set: overflow in 4 bits':''})</p>`}
+$('#ra').oninput=$('#rb').oninput=adraw;adraw();
+{let h='<table><tr><th>A</th><th>B</th><th>Cin</th><th>Sum</th><th>Cout</th></tr>';for(let i=0;i<8;i++){const a=i>>2,b=(i>>1)&1,c=i&1,t=a+b+c;h+=`<tr><td>${a}</td><td>${b}</td><td>${c}</td><td class="o${t&1}">${t&1}</td><td class="o${t>>1}">${t>>1}</td></tr>`}$('#fa').innerHTML=h+'</table>'}
+// quantum
+const r2=Math.SQRT1_2,GM={H:[[r2,0],[r2,0],[r2,0],[-r2,0]],X:[[0,0],[1,0],[1,0],[0,0]],Y:[[0,0],[0,-1],[0,1],[0,0]],Z:[[1,0],[0,0],[0,0],[-1,0]],S:[[1,0],[0,0],[0,0],[0,1]],T:[[1,0],[0,0],[0,0],[r2,r2]],Sdg:[[1,0],[0,0],[0,0],[0,-1]],Tdg:[[1,0],[0,0],[0,0],[r2,-r2]],SX:[[.5,.5],[.5,-.5],[.5,-.5],[.5,.5]]};
+const G1=Object.keys(GM),G2=['CNOT','CZ','SWAP'];let UP=8,N=2,sel='H',COLS=8,ops=[...Array(COLS)].map(()=>[]);
+G1.concat(G2).forEach(g=>$('#qp').append(mk('button','chip',g,()=>{sel=g;qdraw()})));
+[1,2,3,4].forEach(n=>$('#qn').append(mk('button','chip',n,()=>{N=n;ops.forEach((c,i)=>ops[i]=c.filter(o=>o.q.every(q=>q<N)));qdraw()})));
+const PRE={'Superposition':[[0,'H',[0]]],'Bell state':[[0,'H',[0]],[1,'CNOT',[0,1]]],'GHZ (3 qubits)':[[0,'H',[0]],[1,'CNOT',[0,1]],[2,'CNOT',[1,2]]],'Interference':[[0,'H',[0]],[1,'Z',[0]],[2,'H',[0]]],'Swap |1⟩':[[0,'X',[0]],[1,'SWAP',[0,1]]]};
+Object.keys(PRE).forEach(k=>$('#qs').append(mk('button','chip',k,()=>{N=Math.max(k.includes('GHZ')?3:2,1);ops=[...Array(COLS)].map(()=>[]);PRE[k].forEach(p=>ops[p[0]].push({g:p[1],q:p[2]}));qdraw()})));
+function sim(){const L=1<<N,re=new Float64Array(L),im=new Float64Array(L);re[0]=1;
+ops.slice(0,UP).forEach(c=>c.forEach(o=>{const g=o.g;if(GM[g]){const m=GM[g],mk_=1<<(N-1-o.q[0]);for(let i=0;i<L;i++)if(!(i&mk_)){const j=i|mk_,ar=re[i],ai=im[i],br=re[j],bi=im[j];
+re[i]=m[0][0]*ar-m[0][1]*ai+m[1][0]*br-m[1][1]*bi;im[i]=m[0][0]*ai+m[0][1]*ar+m[1][0]*bi+m[1][1]*br;
+re[j]=m[2][0]*ar-m[2][1]*ai+m[3][0]*br-m[3][1]*bi;im[j]=m[2][0]*ai+m[2][1]*ar+m[3][0]*bi+m[3][1]*br}}
+else{const a=1<<(N-1-o.q[0]),b=1<<(N-1-o.q[1]);for(let i=0;i<L;i++){if(g=='CNOT'&&(i&a)&&!(i&b)){const j=i|b;[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}
+else if(g=='CZ'&&(i&a)&&(i&b)){re[i]=-re[i];im[i]=-im[i]}
+else if(g=='SWAP'&&(i&a)&&!(i&b)){const j=(i^a)|b;[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}}}}));
+return{re,im,p:[...re].map((x,i)=>x*x+im[i]*im[i])}}
+function place(r,c){const col=ops[c],hit=col.findIndex(o=>o.q.includes(r));if(hit>=0){col.splice(hit,1);return}
+const two=G2.includes(sel);if(two&&N<2)return;const q=two?[r,(r+1)%N]:[r];ops[c]=col.filter(o=>!o.q.some(x=>q.includes(x)));ops[c].push({g:sel,q})}
+function qdraw(){document.querySelectorAll('#qp .chip').forEach(c=>c.classList.toggle('on',c.textContent==sel));document.querySelectorAll('#qn .chip').forEach(c=>c.classList.toggle('on',c.textContent==N));
+const g=$('#qg');g.innerHTML='';const box=mk('div','qg');box.style.gridTemplateColumns=`auto repeat(${COLS},46px)`;
+for(let r=0;r<N;r++){box.append(mk('div','lab',`q${r} |0⟩`));for(let c=0;c<COLS;c++){const cell=mk('div','cell',null,()=>{place(r,c);qdraw()});cell.setAttribute('role','button');cell.setAttribute('aria-label',`wire q${r} step ${c+1}`);
+const o=ops[c].find(o=>o.q.includes(r));if(o){const first=o.q[0]==r;
+if(G1.includes(o.g))cell.append(mk('div','gb',o.g));
+else{const tgt=o.q[1]==r;let el;if(o.g=='CNOT')el=tgt?mk('div','gb','⊕'):mk('div','dot');else if(o.g=='CZ')el=mk('div','dot');else el=mk('div','gb','×');cell.append(el);
+if(first){const a=o.q[0],b=o.q[1],d=Math.abs(b-a),v=mk('div','vl');v.style.top='50%';v.style.height=(b>a?d*46:0)+'px';if(b<a){v.style.top=(-(d-0)*46+23)+'px';v.style.height=d*46+'px'}if(b>a)v.style.height=d*46+'px';cell.append(v)}
+else if(o.q[1]==r&&o.q[0]>r){const d=o.q[0]-r,v=mk('div','vl');v.style.top='50%';v.style.height=d*46+'px';cell.append(v)}}}
+box.append(cell)}}
+g.append(box);const s=sim();$('#qb').innerHTML='';$('#qa').innerHTML='';
+s.p.forEach((p,i)=>{const l='|'+i.toString(2).padStart(N,'0')+'⟩';const b=mk('div','bar');b.innerHTML=`<span>${l}</span><div><i style="width:${p*100}%"></i></div><span>${(p*100).toFixed(1)}%</span>`;$('#qb').append(b);
+if(p>1e-9){const ph=Math.atan2(s.im[i],s.re[i])*180/Math.PI;$('#qa').append(mk('div',null,`${l} ${s.re[i].toFixed(3)}${s.im[i]<0?'−':'+'}${Math.abs(s.im[i]).toFixed(3)}i  ∠${ph.toFixed(0)}°`))}});$('#so').innerHTML=''}
+$('#sh').onclick=()=>{const s=sim(),cnt=new Array(s.p.length).fill(0);for(let k=0;k<1024;k++){let u=Math.random(),i=0;while(i<s.p.length-1&&u>s.p[i]){u-=s.p[i];i++}cnt[i]++}
+$('#so').innerHTML='';cnt.forEach((c,i)=>{const b=mk('div','bar s');b.innerHTML=`<span>|${i.toString(2).padStart(N,'0')}⟩</span><div><i style="width:${c/10.24}%"></i></div><span>${c}</span>`;$('#so').append(b)})};
+qdraw();
+
+// ---- NAND universality
+const nd=(a,b)=>1^(a&b),NB={NOT:[a=>nd(a,a),'NAND(A, A)',1],AND:[(a,b)=>nd(nd(a,b),nd(a,b)),'NAND( NAND(A,B), NAND(A,B) )',2],OR:[(a,b)=>nd(nd(a,a),nd(b,b)),'NAND( NAND(A,A), NAND(B,B) )',3],NOR:[(a,b)=>{const o=nd(nd(a,a),nd(b,b));return nd(o,o)},'NOT( OR(A,B) ), all from NAND',4],XOR:[(a,b)=>{const m=nd(a,b);return nd(nd(a,m),nd(b,m))},'M = NAND(A,B);  NAND( NAND(A,M), NAND(B,M) )',4],XNOR:[(a,b)=>{const m=nd(a,b),x=nd(nd(a,m),nd(b,m));return nd(x,x)},'NOT( XOR(A,B) ), all from NAND',5]};
+let nk='XOR';
+function nandraw(){document.querySelectorAll('#nsel .chip').forEach(c=>c.classList.toggle('on',c.textContent==nk));const n=NB[nk];let ok=1;for(let a=0;a<2;a++)for(let b=0;b<2;b++)if(n[0](a,b)!==GT[nk][1](a,b))ok=0;
+$('#nout').innerHTML=`<p class="mono" style="margin-top:8px">${n[1]}</p><p style="color:var(--${ok?'hi':'lo'})">${ok?'✓ Matches '+nk+' on every row':'✗ Mismatch'} · ${n[2]} NAND gate${n[2]>1?'s':''}</p>`}
+Object.keys(NB).forEach(k=>$('#nsel').append(mk('button','chip',k,()=>{nk=k;nandraw()})));nandraw();
+
+// ---- Quine-McCluskey minimiser + Karnaugh map
+function minsop(ms,vars){const n=vars.length,N=1<<n;if(!ms.length)return'0';if(ms.length==N)return'1';
+let g=ms.map(m=>({m:[m],v:m,x:0})),pr=[];
+while(g.length){const nx=new Map(),used=new Set();
+for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++){const a=g[i],b=g[j];if(a.x!=b.x)continue;const d=a.v^b.v;if(d&&!(d&(d-1))){const v=a.v&b.v,x=a.x|d,k=v+'_'+x;used.add(i);used.add(j);if(!nx.has(k))nx.set(k,{m:[...new Set([...a.m,...b.m])],v,x})}}
+g.forEach((a,i)=>{if(!used.has(i))pr.push(a)});g=[...nx.values()]}
+const seen=new Set();pr=pr.filter(p=>{const k=p.v+'_'+p.x;if(seen.has(k))return 0;seen.add(k);return 1});
+const left=new Set(ms),sel=[];ms.forEach(m=>{const c=pr.filter(p=>p.m.includes(m));if(c.length==1&&!sel.includes(c[0]))sel.push(c[0])});
+sel.forEach(p=>p.m.forEach(m=>left.delete(m)));
+while(left.size){let best=null,bc=0;pr.forEach(p=>{const c=p.m.filter(m=>left.has(m)).length;if(c>bc){bc=c;best=p}});sel.push(best);best.m.forEach(m=>left.delete(m))}
+return sel.map(p=>{const s=vars.map((v,k)=>{const b=1<<(n-1-k);return p.x&b?'':(p.v&b?v:v+'′')}).join('');return s||'1'}).join(' + ')}
+function kmh(f,vars){const n=vars.length;if(n<2||n>4)return'';const rb=n>>1,cb=n-rb,g=k=>k^(k>>1),R=1<<rb,C=1<<cb;
+let h='<p class="note" style="margin-top:8px">Karnaugh map (Gray-code order)</p><div class="scr"><table><tr><th>'+vars.slice(0,rb).join('')+' / '+vars.slice(rb).join('')+'</th>';
+for(let c=0;c<C;c++)h+=`<th>${g(c).toString(2).padStart(cb,'0')}</th>`;h+='</tr>';
+for(let r=0;r<R;r++){h+=`<tr><th>${g(r).toString(2).padStart(rb,'0')}</th>`;for(let c=0;c<C;c++){const i=(g(r)<<cb)|g(c),e={};vars.forEach((v,k)=>e[v]=(i>>(n-1-k))&1);const o=f(e)&1;h+=`<td class="o${o}">${o}</td>`}h+='</tr>'}
+return h+'</table></div>'}
+function eq(){const o=$('#eq');try{const a=parse($('#ei').value),b=parse($('#ei2').value),vs=[...new Set([...a.vars,...b.vars])].sort(),n=vs.length;if(n>6)throw'Use 6 variables or fewer';const d=[];
+for(let i=0;i<1<<n;i++){const e={};vs.forEach((v,k)=>e[v]=(i>>(n-1-k))&1);if((a.f(e)&1)!=(b.f(e)&1))d.push(vs.map(v=>v+'='+e[v]).join(' '))}
+o.innerHTML=d.length?`<p class="err">Not equivalent. ${d.length} differing row(s), first at ${d[0]}</p>`:`<p style="color:var(--hi)">Equivalent on all ${1<<n} rows.</p>`}catch(e){o.innerHTML=`<p class="err">${e}</p>`}}
+const ed0=edraw;edraw=()=>{ed0();eq()};$('#ei').oninput=edraw;$('#ei2').oninput=eq;edraw();
+
+// ---- sequential logic
+const FF={SR:['S','R'],D:['D'],JK:['J','K'],T:['T']},FD={SR:'S sets Q to 1, R resets it to 0, both 0 holds. S=R=1 is forbidden.',D:'Q copies D at each clock edge. A one-bit memory.',JK:'Like SR, but J=K=1 toggles Q instead of being forbidden.',T:'T=1 toggles Q on each edge, T=0 holds. The core of counters.'};
+let fk='D',fi={S:0,R:0,D:0,J:0,K:0,T:0},fq=0,fh=[],fc=0,cnt=0;
+function clk(){const i=fi;let q=fq,note='';
+if(fk=='SR'){if(i.S&&i.R)note='S=R=1 is invalid: output held';else if(i.S)q=1;else if(i.R)q=0}
+else if(fk=='D')q=i.D;else if(fk=='JK')q=i.J&&i.K?q^1:i.J?1:i.K?0:q;else q=i.T?q^1:q;
+fq=q;fc++;fh.unshift({n:fc,k:fk,i:FF[fk].map(x=>x+'='+i[x]).join(' '),q,note});fh=fh.slice(0,8);$('#fnote').textContent=note;fdraw()}
+function fdraw(){const ins=FF[fk];document.querySelectorAll('#fsel .chip').forEach(c=>c.classList.toggle('on',c.textContent==fk));
+const w=$('#fin');w.innerHTML='';ins.forEach(k=>{w.append(mk('span',null,k));w.append(mk('button','b tg'+(fi[k]?' on':''),fi[k],()=>{fi[k]^=1;fdraw()}))});w.append(mk('button','b','Clock pulse ↑',clk));
+$('#fq').textContent=fq;$('#fq').classList.toggle('on',!!fq);$('#fqn').textContent=fq^1;$('#fqn').classList.toggle('on',!fq);$('#fd').textContent=FD[fk];
+$('#fh').innerHTML=fh.length?'<div class="scr"><table><tr><th>Edge</th><th>Type</th><th>Inputs</th><th>Q after</th></tr>'+fh.map(r=>`<tr><td>${r.n}</td><td>${r.k}</td><td>${r.i}</td><td class="o${r.q}">${r.q}</td></tr>`).join('')+'</table></div>':'<p class="note">No clock edges yet.</p>'}
+Object.keys(FF).forEach(k=>$('#fsel').append(mk('button','chip',k,()=>{fk=k;fh=[];fc=0;$('#fnote').textContent='';fdraw()})));fdraw();
+function cdraw(){const w=$('#cc');w.innerHTML='';[2,1,0].forEach(i=>{w.append(mk('span','note','Q'+i));w.append(mk('div','lamp'+((cnt>>i&1)?' on':''),cnt>>i&1))});w.append(mk('b','mono','= '+cnt));w.append(mk('button','b','Clock pulse',()=>{cnt=(cnt+1)&7;cdraw()}));w.append(mk('button','b','Reset',()=>{cnt=0;cdraw()}))}cdraw();
+
+// ---- number systems
+const SEG=['1111110','0110000','1101101','1111001','0110011','1011011','1011111','1110000','1111111','1111011','1110111','0011111','1001110','0111101','1001111','1000111'],SP=[[10,4,40,8],[48,14,8,34],[48,56,8,34],[10,88,40,8],[2,56,8,34],[2,14,8,34],[10,46,40,8]];let nv=0xB5;
+function numdraw(){const w=$('#nb');w.innerHTML='';for(let i=7;i>=0;i--){const b=mk('button','b tg'+((nv>>i&1)?' on':''),nv>>i&1,()=>{nv^=1<<i;numdraw()});b.title='2^'+i+' = '+(1<<i);w.append(b)}
+const s=nv>127?nv-256:nv;$('#nd').innerHTML=`<table><tr><th>Unsigned</th><th>Two's complement</th><th>Hex</th><th>Octal</th><th>ASCII</th></tr><tr><td>${nv}</td><td>${s}</td><td>0x${nv.toString(16).toUpperCase().padStart(2,'0')}</td><td>${nv.toString(8)}</td><td>${nv>31&&nv<127?String.fromCharCode(nv):'·'}</td></tr></table>`;
+const p=SEG[nv&15];$('#sg').innerHTML=`<svg viewBox="0 0 60 100" width="70" height="116" role="img" aria-label="seven-segment digit">${SP.map((r,i)=>`<rect x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="2" style="fill:var(${p[i]=='1'?'--hi':'--line'})"/>`).join('')}</svg>`;
+$('#sgt').innerHTML=`Digit ${(nv&15).toString(16).toUpperCase()}<br>abcdefg = ${p}<br>lit: ${[...p].map((c,i)=>c=='1'?'abcdefg'[i]:'').join(' ')}`}
+[['NOT',x=>~x],['+1',x=>x+1],['−1',x=>x-1],['<<1',x=>x<<1],['>>1',x=>x>>1],['Clear',()=>0]].forEach(o=>$('#no').append(mk('button','chip',o[0],()=>{nv=o[1](nv)&255;numdraw()})));numdraw();
+
+// ---- practice quiz
+const zs={ok:0,n:0,cur:null},ZE=['A & B','A | B','A ^ B','!(A & B)','!(A | B)','(A & B) | C','(A | B) & !C','A ^ B ^ C','!A | B','(A & !B) | (!A & B)','!(A ^ B) & C'];
+function znew(){const e=ZE[Math.random()*ZE.length|0],{f,vars}=parse(e),env={};vars.forEach(v=>env[v]=Math.random()<.5?1:0);zs.cur={a:f(env)&1,done:0};
+$('#zt').innerHTML=`<p class="mono" style="font-size:20px">${e}</p><p class="mono">${vars.map(v=>v+' = '+env[v]).join(',  ')}</p>`;$('#zf').textContent=''}
+function zans(x){const c=zs.cur;if(c.done)return;c.done=1;zs.n++;if(x==c.a)zs.ok++;$('#zf').innerHTML=x==c.a?'<b style="color:var(--hi)">✓ Correct</b>':`<b class="err">✗ The output is ${c.a}</b>`;$('#zs').textContent=`Score ${zs.ok} / ${zs.n}`}
+$('#z0').onclick=()=>zans(0);$('#z1').onclick=()=>zans(1);$('#zn').onclick=znew;znew();
+
+// ---- quantum extras
+function addPre(k,a){PRE[k]=a;$('#qs').append(mk('button','chip',k,()=>{N=2;ops=[...Array(COLS)].map(()=>[]);a.forEach(p=>ops[p[0]].push({g:p[1],q:p[2]}));qdraw()}))}
+addPre('Bell Φ−',[[0,'H',[0]],[1,'Z',[0]],[2,'CNOT',[0,1]]]);
+addPre('Grover |11⟩',[[0,'H',[0]],[0,'H',[1]],[1,'CZ',[0,1]],[2,'H',[0]],[2,'H',[1]],[3,'X',[0]],[3,'X',[1]],[4,'CZ',[0,1]],[5,'X',[0]],[5,'X',[1]],[6,'H',[0]],[6,'H',[1]]]);
+addPre('√X twice = X',[[0,'SX',[0]],[1,'SX',[0]]]);
+addPre('H·S·S·H = X',[[0,'H',[0]],[1,'S',[0]],[2,'S',[0]],[3,'H',[0]]]);
+const qd0=qdraw;qdraw=()=>{qd0();const s=sim();
+if(N==2){const m=(a,b,c,d)=>[a*c-b*d,a*d+b*c],x=m(s.re[0],s.im[0],s.re[3],s.im[3]),y=m(s.re[1],s.im[1],s.re[2],s.im[2]),C=2*Math.hypot(x[0]-y[0],x[1]-y[1]);$('#qa').append(mk('div','note','Entanglement (concurrence) '+C.toFixed(3)+(C>.999?': maximally entangled':C<.001?': separable':'')))}
+const L=['OPENQASM 2.0;','include "qelib1.inc";',`qreg q[${N}];`,`creg c[${N}];`],mp={CNOT:'cx',CZ:'cz',SWAP:'swap'};
+ops.slice(0,UP).forEach(c=>c.forEach(o=>L.push((mp[o.g]||o.g.toLowerCase())+' '+o.q.map(q=>'q['+q+']').join(',')+';')));$('#qq').textContent=L.join('\n')};
+$('#qup').oninput=e=>{UP=+e.target.value;$('#qupv').textContent=UP;qdraw()};
+$('#qclr').onclick=()=>{ops=[...Array(COLS)].map(()=>[]);qdraw()};
+$('#qcp').onclick=()=>{try{navigator.clipboard.writeText($('#qq').textContent).then(()=>{$('#qcp').textContent='Copied'},()=>{})}catch(e){}};
+qdraw();
+</script></body></html>
